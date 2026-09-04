@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marvin — Quick Copy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&display=swap');
+
+  :root{
+    --bg:#FFFFFF;
+    --ink:#0A0A0A;
+    --ink-soft:#5C5C5C;
+    --line:#D9D9D9;
+    --line-strong:#0A0A0A;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    padding:32px 20px 60px;
+  }
+
+  .wrap{ max-width:760px; margin:0 auto; }
+
+  header{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:16px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:16px;
+    margin-bottom:24px;
+  }
+  header h1{
+    font-family:'IBM Plex Serif', serif;
+    font-weight:700;
+    font-size:26px;
+    margin:0;
+    letter-spacing:-0.01em;
+    justify-self:start;
+  }
+
+  .bkk{
+    text-align:center;
+  }
+  .bkk-time{
+    font-family:'IBM Plex Serif', serif;
+    font-weight:700;
+    font-size:38px;
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:0.01em;
+  }
+  .bkk-date{
+    margin-top:4px;
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink-soft);
+    letter-spacing:0.02em;
+  }
+
+  .clocks{
+    text-align:right;
+    justify-self:end;
+  }
+  .clock-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:flex-end;
+    gap:8px;
+    line-height:1.5;
+  }
+  .clock-zone{
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    color:var(--ink-soft);
+    width:32px;
+    text-align:right;
+  }
+  .clock-time{
+    font-family:'IBM Plex Serif', serif;
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+  .tab{
+    background:none;
+    border:1.5px solid var(--ink);
+    color:var(--ink);
+    font-family:inherit;
+    font-size:13px;
+    font-weight:500;
+    padding:7px 14px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .tab.active{
+    background:var(--ink);
+    color:var(--bg);
+  }
+
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:24px;
+  }
+
+  .card{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-left:4px solid var(--ink);
+    border-radius:2px;
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    cursor:pointer;
+  }
+  .card:hover{ border-color:var(--ink); }
+  .card .body{ flex:1; min-width:0; }
+  .card .label{
+    font-weight:600;
+    font-size:14px;
+    margin-bottom:3px;
+  }
+  .card .text{
+    font-size:13px;
+    color:var(--ink-soft);
+    white-space:pre-wrap;
+    word-break:break-word;
+    max-height:4.4em;
+    overflow:hidden;
+    line-height:1.45;
+  }
+  .card .actions{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .icon-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    width:30px; height:30px;
+    border-radius:3px;
+    cursor:pointer;
+    font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .icon-btn:hover{ border-color:var(--ink); color:var(--ink); }
+
+  .copy-btn{
+    background:var(--ink);
+    color:var(--bg);
+    border:none;
+    padding:9px 16px;
+    border-radius:3px;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    font-family:inherit;
+    flex-shrink:0;
+    min-width:88px;
+  }
+  .copy-btn.copied{ background:var(--ink-soft); }
+
+  .empty{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+    border:1.5px dashed var(--line);
+    border-radius:4px;
+  }
+
+  .add-form{
+    background:var(--bg);
+    border:1.5px solid var(--ink);
+    border-radius:4px;
+    padding:16px;
+    display:none;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .add-form.open{ display:flex; }
+  .add-form input, .add-form textarea, .add-form select{
+    font-family:inherit;
+    font-size:13px;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:var(--bg);
+    color:var(--ink);
+    width:100%;
+  }
+  .add-form textarea{ resize:vertical; min-height:64px; }
+  .add-form .row{ display:flex; gap:8px; }
+  .add-form .row-btns{ display:flex; gap:8px; justify-content:flex-end; }
+  .btn-primary{
+    background:var(--ink);
+    color:var(--bg);
+    border:none;
+    padding:9px 16px;
+    border-radius:3px;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .btn-primary:hover{ background:#2A2A2A; }
+  .btn-ghost{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:9px 16px;
+    border-radius:3px;
+    font-size:13px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+
+  .fab{
+    display:block;
+    width:100%;
+    background:none;
+    border:1.5px dashed var(--ink-soft);
+    color:var(--ink-soft);
+    padding:12px;
+    border-radius:4px;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .fab:hover{ border-color:var(--ink); color:var(--ink); }
+
+  .loading{ text-align:center; padding:60px 0; color:var(--ink-soft); font-size:13px; }
+
+  @media (max-width:520px){
+    header{ grid-template-columns:1fr; text-align:center; gap:10px; }
+    header h1{ justify-self:center; }
+    .clocks{ justify-self:center; text-align:center; }
+    .clock-row{ justify-content:center; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Marvin's Quick Copy</h1>
+    <div class="bkk">
+      <div class="bkk-time" id="bkkTime">--:--:--</div>
+      <div class="bkk-date" id="bkkDate">--</div>
+    </div>
+    <div class="clocks">
+      <div class="clock-row"><span class="clock-zone">HEL</span><span class="clock-time" id="clockHel">--:--:--</span></div>
+      <div class="clock-row"><span class="clock-zone">UTC</span><span class="clock-time" id="clockUtc">--:--:--</span></div>
+    </div>
+  </header>
+
+  <div id="loading" class="loading">Loading your snippets…</div>
+  <div id="app" style="display:none;">
+    <div class="tabs" id="tabs"></div>
+    <div class="add-form" id="addForm">
+      <div class="row">
+        <input id="fLabel" type="text" placeholder="Label (e.g. Work email, AWB reply)" />
+      </div>
+      <textarea id="fText" placeholder="The text you want to copy"></textarea>
+      <div class="row">
+        <select id="fCategory"></select>
+        <input id="fNewCategory" type="text" placeholder="Or type a new category" style="display:none;" />
+      </div>
+      <div class="row-btns">
+        <button class="btn-ghost" id="cancelAdd">Cancel</button>
+        <button class="btn-primary" id="saveAdd">Save snippet</button>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+    <button class="fab" id="showAdd">+ Add a snippet</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'snippets';
+  let snippets = [];
+  let activeCategory = null;
+  let editingId = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function uid(){ return 'sn_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+
+  const DEFAULTS = [
+    { id: uid(), category: 'Personal', label: 'Full name', text: 'Peerapat Singthong' },
+    { id: uid(), category: 'Personal', label: 'Email', text: 'your.email@example.com — tap edit to set this' },
+    { id: uid(), category: 'Work', label: 'Standard cargo acknowledgement', text: 'Thank you for your booking. This confirms receipt of your shipment details. We will advise flight allocation and AWB status shortly.' },
+    { id: uid(), category: 'Work', label: 'Offload notice template', text: 'Please be advised shipment [AWB NUMBER] was offloaded from flight [FLIGHT NO] on [DATE] due to [REASON]. Rebooking is confirmed on [NEW FLIGHT/DATE].' },
+    { id: uid(), category: 'Custom', label: 'Example — edit or delete me', text: 'This is a sample snippet. Click the pencil to edit, or the × to remove it.' },
+  ];
+
+  const LS_KEY = 'quickcopy_' + STORAGE_KEY;
+
+  async function loadSnippets(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw){
+        snippets = JSON.parse(raw);
+      } else {
+        snippets = DEFAULTS;
+        await persist();
+      }
+    } catch(e){
+      snippets = DEFAULTS;
+      try { await persist(); } catch(e2){ console.error('Could not seed storage', e2); }
+    }
+    if (!snippets.length) snippets = [];
+    const cats = getCategories();
+    activeCategory = cats[0] || 'Custom';
+    render();
+    $('loading').style.display = 'none';
+    $('app').style.display = 'block';
+  }
+
+  async function persist(){
+    try{
+      localStorage.setItem(LS_KEY, JSON.stringify(snippets));
+    } catch(e){
+      console.error('Storage error', e);
+    }
+  }
+
+  function getCategories(){
+    const set = [];
+    snippets.forEach(s => { if (!set.includes(s.category)) set.push(s.category); });
+    ['Personal','Work','Custom'].forEach(c => { if (!set.includes(c)) set.push(c); });
+    return set;
+  }
+
+  function render(){
+    renderTabs();
+    renderList();
+    renderCategoryOptions();
+  }
+
+  function renderTabs(){
+    const cats = getCategories();
+    const tabs = $('tabs');
+    tabs.innerHTML = '';
+    cats.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'tab' + (cat === activeCategory ? ' active' : '');
+      btn.textContent = cat;
+      btn.onclick = () => { activeCategory = cat; render(); };
+      tabs.appendChild(btn);
+    });
+  }
+
+  function renderCategoryOptions(){
+    const sel = $('fCategory');
+    const cats = getCategories();
+    sel.innerHTML = '';
+    cats.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+    const optNew = document.createElement('option');
+    optNew.value = '__new__'; optNew.textContent = '+ New category…';
+    sel.appendChild(optNew);
+  }
+
+  function renderList(){
+    const list = $('list');
+    list.innerHTML = '';
+    const items = snippets.filter(s => s.category === activeCategory);
+    if (!items.length){
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'No snippets in ' + activeCategory + ' yet. Add one below.';
+      list.appendChild(empty);
+      return;
+    }
+    items.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.title = 'Click to copy';
+      card.onclick = () => copyText(s.text, copyBtn);
+
+      const body = document.createElement('div');
+      body.className = 'body';
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = s.label;
+      const text = document.createElement('div');
+      text.className = 'text';
+      text.textContent = s.text;
+      body.appendChild(label);
+      body.appendChild(text);
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.onclick = (e) => { e.stopPropagation(); copyText(s.text, copyBtn); };
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      const editBtn = document.createElement('button');
+      editBtn.className = 'icon-btn';
+      editBtn.title = 'Edit';
+      editBtn.textContent = '✎';
+      editBtn.onclick = (e) => { e.stopPropagation(); openEdit(s); };
+      const delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn';
+      delBtn.title = 'Delete';
+      delBtn.textContent = '×';
+      delBtn.onclick = (e) => { e.stopPropagation(); deleteSnippet(s.id); };
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+
+      card.appendChild(body);
+      card.appendChild(copyBtn);
+      card.appendChild(actions);
+      list.appendChild(card);
+    });
+  }
+
+  async function copyText(text, btn){
+    try{
+      await navigator.clipboard.writeText(text);
+    } catch(e){
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch(e2){}
+      document.body.removeChild(ta);
+    }
+    const original = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1400);
+  }
+
+  function openAdd(){
+    editingId = null;
+    $('fLabel').value = '';
+    $('fText').value = '';
+    $('fNewCategory').style.display = 'none';
+    $('fNewCategory').value = '';
+    renderCategoryOptions();
+    $('fCategory').value = activeCategory;
+    $('addForm').classList.add('open');
+    $('showAdd').style.display = 'none';
+    $('fLabel').focus();
+  }
+
+  function openEdit(s){
+    editingId = s.id;
+    $('fLabel').value = s.label;
+    $('fText').value = s.text;
+    $('fNewCategory').style.display = 'none';
+    $('fNewCategory').value = '';
+    renderCategoryOptions();
+    $('fCategory').value = s.category;
+    $('addForm').classList.add('open');
+    $('showAdd').style.display = 'none';
+    $('fLabel').focus();
+  }
+
+  function closeForm(){
+    $('addForm').classList.remove('open');
+    $('showAdd').style.display = 'block';
+    editingId = null;
+  }
+
+  async function saveForm(){
+    const label = $('fLabel').value.trim();
+    const text = $('fText').value.trim();
+    let category = $('fCategory').value;
+    if (category === '__new__'){
+      category = $('fNewCategory').value.trim() || 'Custom';
+    }
+    if (!label || !text){
+      $('fLabel').style.borderColor = label ? '#D9D9D9' : '#0A0A0A';
+      $('fText').style.borderColor = text ? '#D9D9D9' : '#0A0A0A';
+      return;
+    }
+    if (editingId){
+      const idx = snippets.findIndex(s => s.id === editingId);
+      if (idx !== -1) snippets[idx] = { ...snippets[idx], label, text, category };
+    } else {
+      snippets.push({ id: uid(), label, text, category });
+    }
+    await persist();
+    activeCategory = category;
+    closeForm();
+    render();
+  }
+
+  async function deleteSnippet(id){
+    snippets = snippets.filter(s => s.id !== id);
+    await persist();
+    render();
+  }
+
+  $('showAdd').onclick = openAdd;
+  $('cancelAdd').onclick = closeForm;
+  $('saveAdd').onclick = saveForm;
+  $('fCategory').onchange = (e) => {
+    $('fNewCategory').style.display = e.target.value === '__new__' ? 'block' : 'none';
+  };
+
+  function pad(n){ return String(n).padStart(2, '0'); }
+
+  function updateClocks(){
+    const now = new Date();
+
+    const helFmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Helsinki', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+    const utcFmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'UTC', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+    $('clockHel').textContent = helFmt.format(now).replace(/,/g, '');
+    $('clockUtc').textContent = utcFmt.format(now).replace(/,/g, '');
+
+    const bkkTimeFmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+    $('bkkTime').textContent = bkkTimeFmt.format(now).replace(/,/g, '');
+
+    const bkkParts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Bangkok', day: '2-digit', month: '2-digit', year: 'numeric', weekday: 'long'
+    }).formatToParts(now);
+    const p = {};
+    bkkParts.forEach(part => { p[part.type] = part.value; });
+    $('bkkDate').textContent = p.day + ':' + p.month + ':' + p.year + '  ' + p.weekday;
+  }
+
+  updateClocks();
+  setInterval(updateClocks, 1000);
+
+  loadSnippets();
+})();
+</script>
+</body>
+</html>
